@@ -16,15 +16,12 @@ import datetime
 VCF_FILE = sys.argv[1]
 
 
-print software_version
-print "Job started at: " + print_date_time
-
-
 def audittrail(audit_file, audit_info):
     '''To write relevant audit trail information to a file.
     '''
     with open(audit_file, "a") as audit:
         audit.write(audit_info)
+        audit.write("\n")
 
 
 # this function was DEFINTELY working 2015/05/31
@@ -52,7 +49,7 @@ def vcftotxt(vcf_file, output_name, audit_file):
     #sanity check for user.
     print "Variants text file has been generated."
     # write file name to audit file
-    audit = "Variants text file has been generated. File name %s \n" %output_name
+    audit = "Variants text file has been generated. File name %s" %output_name
     audittrail(audit_file, audit)
     
     converted_file = txtBase64(output_name) # nest this here to save a step
@@ -78,13 +75,18 @@ def MutalyzerBatchSubmission(MutalyzerInputfile, MutalyzerProcess, GenomeBuild, 
     # Not clear what it's for, but it seems necessary
     c = Client(URL, cache=None)
     o = c.service
-
-#need to add in printing to the audit file the Mutalyzer version (see https://mutalyzer.nl/soap-api#op.getCache)
+    
+    MutalyzerVersion = "Mutalyzer version: " + o.info().version
+    HGVSVersion = "HGVS version: " + o.info().nomenclatureVersion
+    
+    audittrail(audit_file, MutalyzerVersion) 
+    audittrail(audit_file, HGVSVersion)
+#need to add in printing to the audit file the Mutalyzer version (see https://mutalyzer.nl/soap-api#op.info)
 
     # This submits the batch job, providing the required arguments
     BatchJobID = o.submitBatchJob(MutalyzerInputfile, MutalyzerProcess, GenomeBuild)
 
-    MutalyzerBatchID = "Mutalyzer Batch job ID: %s \n" %BatchJobID
+    MutalyzerBatchID = "Mutalyzer Batch job ID: %s" %BatchJobID
 
     audittrail(audit_file, MutalyzerBatchID) #write batch job info to the audit file
 
@@ -121,10 +123,10 @@ def MutalyzerPositionConverter(vcf_file):
     '''
     PosConvAudit_file = vcf_file + "audit.txt"
     output_name = vcf_file + ".txt"
-    software_version = "VCF variant converter v1.0 \n"
+    software_version = "VCF variant converter v1.0"
     print_date_time = datetime.datetime.now().strftime("%y-%m-%d %H:%M")
-    job_started = "Job started at: " + print_date_time + "\n"
-    input_vcf = "VCF file for analysis %s \n" %vcf_file
+    job_started = "Job started at: " + print_date_time
+    input_vcf = "VCF file for analysis %s" %vcf_file
     
     audittrail(PosConvAudit_file, software_version)
     audittrail(PosConvAudit_file, job_started)
@@ -141,7 +143,7 @@ def MutalyzerPositionConverter(vcf_file):
 
     decodeBase64(MutalyzerResult, NewVarFilename)
 
-    job_finished = "Job finished at: " + print_date_time + "\n"
+    job_finished = "Job finished at: " + print_date_time
    
     audittrail(PosConvAudit_file, job_finished)
    
