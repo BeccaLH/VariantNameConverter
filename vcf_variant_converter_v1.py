@@ -3,9 +3,9 @@
 ## Mutalyzer Position Converter
 ## Version: 1.0
 ##
-## Takes a vcf file, converts the variants to the correct format for the Mutalyzer
-## batch query web service then queries the web service to annotate the variants
-## with HGVS nomenclature.
+## Takes a vcf file, converts the variants to the correct format for the 
+## Mutalyzer batch query web service then queries the web service to annotate 
+## the variants with HGVS nomenclature.
 ##
 ## Use: python vcf_variant_converter_v1.py "VCF_FileName"
 
@@ -53,8 +53,9 @@ def vcftotxt(vcf_file, output_name, audit_file):
     audit = "Variants text file has been generated. File name %s" %output_name
     audittrail(audit_file, audit)
     
-    converted_file = txtBase64(output_name) # nest this here to save a step
-    return converted_file # you need to return the file handle to pass between functions
+    # convert file to Base64 for input to mutalyzer (calling the next function)
+    converted_file = txtBase64(output_name) 
+    return converted_file 
 
 
 def txtBase64(output_text):
@@ -88,8 +89,9 @@ def MutalyzerBatchSubmission(MutalyzerInputfile, MutalyzerProcess, GenomeBuild, 
     BatchJobID = o.submitBatchJob(MutalyzerInputfile, MutalyzerProcess, GenomeBuild)
 
     MutalyzerBatchID = "Mutalyzer Batch job ID: %s" %BatchJobID
-
-    audittrail(audit_file, MutalyzerBatchID) #write batch job info to the audit file
+    
+    #write batch job info to the audit file
+    audittrail(audit_file, MutalyzerBatchID) 
 
     print "Job submitted to Mutalyzer"
     print "Batch job identifier: " + BatchJobID
@@ -102,8 +104,8 @@ def MutalyzerBatchSubmission(MutalyzerInputfile, MutalyzerProcess, GenomeBuild, 
     while r >0:
         r = o.monitorBatchJob(BatchJobID)
 
-    # get the result of the batch job once the job is complete (the result of the
-    # monitor the job query == 0)
+    # get the result of the batch job once the job is complete (the result of 
+    # the monitor the job query == 0)
     MutalyzerOutput = o.getBatchJob(BatchJobID)
 
     return MutalyzerOutput
