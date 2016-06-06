@@ -126,7 +126,7 @@ def MutalyzerPositionConverter(vcf_file):
     '''call all of the functions to run the program
     '''
     # output file names generated based on name of input VCF
-    PosConvAudit_file = vcf_file + "audit.txt"
+    PosConvAudit_file = vcf_file + "_audit.txt"
     output_name = vcf_file + ".txt"
     
     # write version, start date and time and input file details to audit trail file
