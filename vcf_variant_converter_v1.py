@@ -17,6 +17,14 @@ import datetime
 
 VCF_FILE = sys.argv[1]
 
+# make sure the input file exists before proceeding. 
+# don't want to generate audit file etc if the input filename is incorrect.
+try:
+    fhand = open(sys.argv[1])
+except:
+    print "VCF file cannot be opened. Please check that the file exists and is in vcf format then try again."
+    exit()
+
 
 def audittrail(audit_file, audit_info):
     '''To write relevant audit trail information to a file.
