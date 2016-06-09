@@ -1,0 +1,5 @@
+Paste the text of any errors that arise when running the vcf_variant_converter.py program below
+Include DATE and TIME of every entry
+The bioinformatics team should be informed whenever an entry is made to this file
+
+
