@@ -14,6 +14,7 @@ import vcf #PyVCF library for handling vcf files in python
 from suds.client import Client
 import base64
 import datetime
+import time
 
 VCF_FILE = sys.argv[1]
 
@@ -95,6 +96,8 @@ def MutalyzerBatchSubmission(MutalyzerInputfile, MutalyzerProcess, GenomeBuild, 
 
     # This submits the batch job, providing the required arguments
     BatchJobID = o.submitBatchJob(MutalyzerInputfile, MutalyzerProcess, GenomeBuild)
+    print type(BatchJobID)
+    print BatchJobID
 
     MutalyzerBatchID = "Mutalyzer Batch job ID: %s" %BatchJobID
     
@@ -108,9 +111,10 @@ def MutalyzerBatchSubmission(MutalyzerInputfile, MutalyzerProcess, GenomeBuild, 
 
     r = o.monitorBatchJob(BatchJobID)
 
-    # Definitely inefficient but it works...
+    # checking whether the batch job is complete.
     while r >0:
         r = o.monitorBatchJob(BatchJobID)
+        time.sleep(10) # wait for 10 seconds before checking status of job again
 
     # get the result of the batch job once the job is complete (the result of 
     # the monitor the job query == 0)
