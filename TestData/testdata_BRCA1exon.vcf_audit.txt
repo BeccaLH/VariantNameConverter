@@ -1,0 +1,8 @@
+VCF variant converter v1.0
+Job started at: 16-06-10 13:23
+VCF file for analysis TestData/testdata_BRCA1exon.vcf
+Variants text file has been generated. File name TestData/testdata_BRCA1exon.vcf.txt
+Mutalyzer version: 2.0.20.dev
+HGVS version: 2.0
+Mutalyzer Batch job ID: 8d1de541-2864-4381-af31-6c8a4fbfeed2
+Job finished at: 16-06-10 13:23
