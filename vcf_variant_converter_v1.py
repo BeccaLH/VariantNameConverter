@@ -51,8 +51,10 @@ def vcftotxt(vcf_file, output_name, audit_file):
     with open(output_name, "w") as variants_txtfile:
 
         for record in vcf_reader:
-            ALT = str(record.ALT[0]) #record.ALT is a list
-            variant = record.CHROM+":g."+str(record.POS)+record.REF+">"+ALT
+            if "chr" in str(record.ALT[0]): # when chr is already part of the CHROM field
+                variant = record.CHROM+":g."+str(record.POS)+record.REF+">"+str(record.ALT[0])
+            else: # when chr needs to be added.
+                variant = "chr"+record.CHROM+":g."+str(record.POS)+record.REF+">"+str(record.ALT[0])
             variants_txtfile.write(variant)
             variants_txtfile.write("\n")
 
@@ -143,8 +145,8 @@ def MutalyzerPositionConverter(vcf_file):
     
     # write version, start date and time and input file details to audit trail file
     software_version = "VCF variant converter v1.0"
-    print_date_time = datetime.datetime.now().strftime("%y-%m-%d %H:%M")
-    job_started = "Job started at: " + print_date_time
+    print_start_time = datetime.datetime.now().strftime("%y-%m-%d %H:%M")
+    job_started = "Job started at: " + print_start_time
     input_vcf = "VCF file for analysis %s" %vcf_file
     audittrail(PosConvAudit_file, software_version)
     audittrail(PosConvAudit_file, job_started)
@@ -163,7 +165,8 @@ def MutalyzerPositionConverter(vcf_file):
     decodeBase64(MutalyzerResult, NewVarFilename)
 
     # write time job finished to audit file
-    job_finished = "Job finished at: " + print_date_time
+    print_stop_time = datetime.datetime.now().strftime("%y-%m-%d %H:%M")
+    job_finished = "Job finished at: " + print_stop_time
     audittrail(PosConvAudit_file, job_finished)
    
     # Sanity check for the user
