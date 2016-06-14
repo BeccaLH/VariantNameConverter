@@ -1,0 +1,6 @@
+VCF variant converter v1.0
+Job started at: 16-06-14 13:01
+VCF file for analysis TestData/Test5/testdata_BRCAexon.vcf
+Variants text file has been generated. File name TestData/Test5/testdata_BRCAexon.vcf.txt
+Mutalyzer version: 2.0.20.dev
+Mutalyzer version has been updated. Contact the bioinformatician. Position Converter program has not been run.

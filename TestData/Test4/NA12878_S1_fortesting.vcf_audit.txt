@@ -1,0 +1,8 @@
+VCF variant converter v1.0
+Job started at: 16-06-14 12:49
+VCF file for analysis TestData/Test4/NA12878_S1_fortesting.vcf
+Variants text file has been generated. File name TestData/Test4/NA12878_S1_fortesting.vcf.txt
+Mutalyzer version: 2.0.20.dev
+HGVS version: 2.0
+Mutalyzer Batch job ID: 1252c8d1-7026-4976-b461-bf44245846b8
+Job finished at: 16-06-14 12:54

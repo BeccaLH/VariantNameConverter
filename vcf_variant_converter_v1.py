@@ -1,5 +1,5 @@
-## Rebecca Haines
-## 2016/06/01
+## Rebecca Haines rebecca.haines@nuh.nhs.uk
+## 2016/06/14
 ## Mutalyzer Position Converter
 ## Version: 1.0
 ##
@@ -35,30 +35,38 @@ def audittrail(audit_file, audit_info):
         audit.write("\n")
 
 
-def vcftotxt(vcf_file, output_name, audit_file):
+def vcftotxt(vcf_file, output_name, indel_filename, audit_file):
     '''Converts the variants in  VCF to a format suitable for Mutalyzer Batch
     Queries (Chr#:g.#GenomicCoord#REF>ALT, eg chr17:g.41223094T>C).
     Output is a text file containing the variants in a list.'''
 
-    #check input file is a vcf
+    # check input file is a vcf
     vcf_filename = str(vcf_file) #converts filename to string
     assert ".vcf" in vcf_filename, "File chosen is not a vcf. Please select a file ending '.vcf'."
 
-    #open the vcf using PyVCF methods
+    # open the vcf using PyVCF methods
     vcf_reader = vcf.Reader(open(vcf_file, 'r'))
 
-    #Open the output file to write variants to
+
+    # Open the output file to write variants to
     with open(output_name, "w") as variants_txtfile:
-
+        
+        # the record is the full variant line in the vcf
         for record in vcf_reader:
-            if "chr" in str(record.ALT[0]): # when chr is already part of the CHROM field
-                variant = record.CHROM+":g."+str(record.POS)+record.REF+">"+str(record.ALT[0])
-            else: # when chr needs to be added.
-                variant = "chr"+record.CHROM+":g."+str(record.POS)+record.REF+">"+str(record.ALT[0])
-            variants_txtfile.write(variant)
-            variants_txtfile.write("\n")
+            for ALT in record.ALT: # some records contain more than one alt
+                if len(record.REF) >1 or len(ALT) >1: # program for SNVs only
+                    # call the indelvariants function to write these variants to a different file.
+                    indelvariants(indel_filename, audit_file, record.CHROM, record.POS, record.REF, ALT)
+                else:
+                    variant = record.CHROM+":g."+str(record.POS)+record.REF+">"+str(ALT)
+                    # Some vcfs contain "chr" in the CHROM field but others do not.
+                    # the Mutalyzer input format requires "chr" in the name.
+                    if "chr" not in variant: 
+                        variant = "chr" + variant
+                variants_txtfile.write(variant) # write the variant to the output text file
+                variants_txtfile.write("\n")
 
-    #sanity check for user.
+    # sanity check for user.
     print "Variants text file has been generated."
     # write file name to audit file
     audit = "Variants text file has been generated. File name %s" %output_name
@@ -67,6 +75,27 @@ def vcftotxt(vcf_file, output_name, audit_file):
     # convert file to Base64 for input to mutalyzer (calling the next function)
     converted_file = txtBase64(output_name) 
     return converted_file 
+
+
+def indelvariants(indelFilename,audit_file,chrom,pos,ref,alt):
+    '''to handle insertion/deletion variants. 
+    This output file will need further work before being suitable for Mutalyzer 
+    submission because the input format required for indels is more complex.
+    A file containing insertion/deletion variants in the form: chr#:g.###REF>ALT
+    '''
+    
+    # Open the output file to write variants to
+    with open(indelFilename, "a") as variants_indelfile:
+        
+        variant = chrom+":g."+str(pos)+ref+">"+str(alt)
+                # Some vcfs contain "chr" in the CHROM field but others do not.
+                # the Mutalyzer input format requires "chr" in the name.
+                
+        if "chr" not in variant: 
+            variant = "chr" + variant
+        
+        variants_indelfile.write(variant) # write the variant to the output text file
+        variants_indelfile.write("\n")
 
 
 def txtBase64(output_text):
@@ -90,16 +119,28 @@ def MutalyzerBatchSubmission(MutalyzerInputfile, MutalyzerProcess, GenomeBuild, 
     c = Client(URL, cache=None)
     o = c.service
     
-    # write Mutalyzer and HGVS version to audit file
-    MutalyzerVersion = "Mutalyzer version: " + o.info().version
-    HGVSVersion = "HGVS version: " + o.info().nomenclatureVersion
+    # write Mutalyzer version to audit file
+    softwareversion = o.info().version
+    MutalyzerVersion = "Mutalyzer version: " + softwareversion
     audittrail(audit_file, MutalyzerVersion) 
+    
+    # check Mutalyzer version is as expected. If an update has occured the 
+    # program must be re-validated
+    if softwareversion != "2.0.20.dev":
+        warning = "Mutalyzer version has been updated. Contact the bioinformatician. \
+Position Converter program has not been run."
+        print warning
+        audittrail(audit_file,warning)
+        exit()
+    
+    # add HGVS version info to the audit trail file   
+    HGVSVersion = "HGVS version: " + o.info().nomenclatureVersion
     audittrail(audit_file, HGVSVersion)
 
     # This submits the batch job, providing the required arguments
     BatchJobID = o.submitBatchJob(MutalyzerInputfile, MutalyzerProcess, GenomeBuild)
-    print type(BatchJobID)
-    print BatchJobID
+    # print type(BatchJobID)  # uncomment this line to investigate issues with 
+    # the webservice. Type should be Class.
 
     MutalyzerBatchID = "Mutalyzer Batch job ID: %s" %BatchJobID
     
@@ -107,7 +148,7 @@ def MutalyzerBatchSubmission(MutalyzerInputfile, MutalyzerProcess, GenomeBuild, 
     audittrail(audit_file, MutalyzerBatchID) 
 
     print "Job submitted to Mutalyzer"
-    print "Batch job identifier: " + BatchJobID
+    print MutalyzerBatchID
 
     # monitor the progress of the batch job
 
@@ -142,6 +183,7 @@ def MutalyzerPositionConverter(vcf_file):
     # output file names generated based on name of input VCF
     PosConvAudit_file = vcf_file + "_audit.txt"
     output_name = vcf_file + ".txt"
+    indel_var_filename = vcf_file + "_indel_vars.text"
     
     # write version, start date and time and input file details to audit trail file
     software_version = "VCF variant converter v1.0"
@@ -153,7 +195,7 @@ def MutalyzerPositionConverter(vcf_file):
     audittrail(PosConvAudit_file, input_vcf)
     
     # convert the variants in the VCF to a text file for submission to Mutalyzer
-    fileformutalyzer = vcftotxt(vcf_file, output_name, PosConvAudit_file)
+    fileformutalyzer = vcftotxt(vcf_file, output_name, indel_var_filename, PosConvAudit_file)
 
     # Run the Mutalyzer query
     MutalyzerProcess = "PositionConverter"
